@@ -1,0 +1,6 @@
+venv
+*.pyc
+.vscode/settings.json
+*.idea
+.idea
+migrations
