@@ -6,6 +6,7 @@ from flask_bcrypt import check_password_hash, generate_password_hash
 import hashlib
 from app.RAM import AppRAM
 from app.Config import config
+from sqlalchemy.dialects.mysql import LONGTEXT
 
 class BaseModel(object):
     """模型基类，为每个模型补充创建时间与更新时间
@@ -182,3 +183,39 @@ class AccountUser(BaseModel_Account, db.Model):
             pass
 
         return json
+
+class ArticleData(BaseModel, db.Model):
+    __tablename__ = 'articledata'
+
+    title = db.Column(db.String(255))
+    content = db.Column(LONGTEXT)
+    introduce = db.Column(db.String(255))
+    cover = db.Column(db.String(255))
+    sourceauthor = db.Column(db.String(255))        # 原作者
+    sourceaddr = db.Column(db.Text)                 # 来源地址
+    sourcetype = db.Column(db.Integer)              # 来源类型      1站内原创, 2趣味论文分享, 3趣味网文分享
+    commentcount = db.Column(db.Integer, default=0) # 评论数统计
+    uploaduser = db.Column(db.Integer)              # 上传的用户id
+    is_delete = db.Column(db.Boolean, default=False)# 删除状态
+    verify = db.Column(db.Integer)                  # 校验状态      0正常, 1未审核, 2被退回
+    verifytxt = db.Column(db.Text)                  # 校验不合格说明
+    Pageviews = db.Column(db.Integer, default=0)    # 浏览量
+    maincategory = db.Column(db.Integer)            # 主类目
+
+    def toDict(self):
+        return dict(
+            title = self.title,
+            content = self.content,
+            introduce = self.introduce,
+            cover = self.cover,
+            sourceauthor = self.sourceauthor,
+            sourceaddr = self.sourceaddr,
+            sourcetype = self.sourcetype,
+            commentcount = self.commentcount,
+            uploaduser = self.uploaduser,
+            is_delete = self.is_delete,
+            verify = self.verify,
+            verifytxt = self.verifytxt,
+            create_time = datetime.strftime(self.create_time, "%Y-%m-%d %H:%M:%S"),
+            update_time = datetime.strftime(self.update_time, "%Y-%m-%d %H:%M:%S")
+        )

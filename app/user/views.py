@@ -50,8 +50,60 @@ def ChangeInfo(request):
 
     if space_github:
         current_account.space_github = space_github
+    
+    try:
+        current_account._update()
+        return 200, "", {
+            "userhead": current_account.userhead
+        }
 
-    current_account._update()
-    return 200, "", {
-        "userhead": current_account.userhead
-    }
+    except Exception as e:
+        print(e)
+        return 400, "出错", {}
+
+def ChangeUsername(request):
+    print(request)
+
+    current_account = request['current_account']
+
+    username = request.get("username", None)
+
+    if not username:
+        return 400, "参数有误", {}
+
+    current_account.username = username
+
+    try:
+        current_account._update()
+        return 200, "", {}
+
+    except Exception as e:
+        print(e)
+        return 400, "出错", {}
+
+def ChangePassword(request):
+    print(request)
+
+    current_account = request['current_account']
+
+    nowpassword = request.get("nowpassword", None)
+    newpassword = request.get("newpassword", None)
+    renewpassword = request.get("renewpassword", None)
+
+    if newpassword != renewpassword:
+        return 400, "两次密码不一致", {}
+
+    if not current_account._is_correct_password(nowpassword):
+        return 400, "当前密码不正确", {}
+
+    current_account._set_new_password(newpassword)
+
+    try:
+        current_account._update()
+        return 200, "", {}
+
+    except Exception as e:
+        print(e)
+        return 400, "出错", {}
+
+    
