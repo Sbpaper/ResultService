@@ -10,6 +10,7 @@ from app.Config import BaseConfig
 from app.register import register
 from app.login import login
 from app.article import article
+from app.follow import follow
 
 
 """
@@ -22,7 +23,8 @@ DEFAULT_BLUEPRINT = (
     (user, '/user'),
     (register, '/register'),
     (login, '/login'),
-    (article, '/article')
+    (article, '/article'),
+    (follow, '/follow')
 )
 
 def config_blueprint(app):

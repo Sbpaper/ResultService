@@ -184,8 +184,23 @@ class AccountUser(BaseModel_Account, db.Model):
 
         return json
 
+class ArticleCategory(BaseModel, db.Model):
+    __tablename__ = 'articlec_ategory'
+
+    name = db.Column(db.String(255))
+    weight = db.Column(db.Integer, default=0)
+
+class ArticleActivity(BaseModel, db.Model):
+    __tablename__ = 'articlea_ctivity'
+
+    name = db.Column(db.String(255))
+    weight = db.Column(db.Integer, default=0)
+    pushstatus = db.Column(db.Boolean, default=False)   # 状态 False 不允许投稿 True 允许投稿
+    startdate = db.Column(db.DateTime)
+    overdate = db.Column(db.DateTime)
+
 class ArticleData(BaseModel, db.Model):
-    __tablename__ = 'articledata'
+    __tablename__ = 'article_data'
 
     title = db.Column(db.String(255))
     content = db.Column(LONGTEXT)
@@ -201,6 +216,7 @@ class ArticleData(BaseModel, db.Model):
     verifytxt = db.Column(db.Text)                  # 校验不合格说明
     Pageviews = db.Column(db.Integer, default=0)    # 浏览量
     maincategory = db.Column(db.Integer)            # 主类目
+    activity = db.Column(db.Integer)                # 活动
 
     def toDict(self):
         return dict(
@@ -219,3 +235,33 @@ class ArticleData(BaseModel, db.Model):
             create_time = datetime.strftime(self.create_time, "%Y-%m-%d %H:%M:%S"),
             update_time = datetime.strftime(self.update_time, "%Y-%m-%d %H:%M:%S")
         )
+
+class FollowRecord(BaseModel, db.Model):
+    __tablename__ = 'follow_record'
+
+    userid = db.Column(db.Integer)
+    follow_userid = db.Column(db.Integer)
+
+class ThumbupRecord(BaseModel, db.Model):
+    __tablename__ = 'thumbup_record'
+
+    userid = db.Column(db.Integer)
+    articleid = db.Column(db.Integer)
+
+class Tag(BaseModel, db.Model):
+    __tablename__ = 'tag'
+
+    name = db.Column(db.String(255))
+
+class TagBindRecord(BaseModel, db.Model):
+    __tablename__ = 'Tag_bindrecord'
+
+    tagid = db.Column(db.Integer)
+    articleid = db.Column(db.Integer)
+
+class TagSubRecord(BaseModel, db.Model):
+    # sub(subscription)
+    __tablename__ = 'tag_subrecord'
+
+    tagid = db.Column(db.Integer)
+    userid = db.Column(db.Integer)
