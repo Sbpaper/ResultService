@@ -75,7 +75,7 @@ def Paginator(data, page, num=10):
     return ret, total, pages
 
 
-def _Paginate(querys, query_page, per_page=10):
+def _Paginate(querys, querypage, perpage=10):
     """Sqlachamy query预处理
 
     Args:
@@ -93,17 +93,24 @@ def _Paginate(querys, query_page, per_page=10):
             total, result, currentPage, totalPages = _Paginate(a,b)
 
     Example:
-        query_page = request.get('query_page',1)
-        total, result, currentPage, totalPages = _Paginate(querys, query_page)
-        "total":total,
-        "result":result,
-        "currentPage":currentPage,
-        "totalPages":totalPages
+        querypage = request.get('querypage',1)
+        perpage = request.get('perpage',10)
+        
+        querys = XXX.query.filter()
+        querys = querys.order_by(XXX.commentcount.desc())
+
+        total, result, currentPage, totalPages = _Paginate(querys, querypage, perpage)
+        return 200, "", {
+            "total":total,
+            "result":[i.toDict() for i in result],
+            "currentPage":currentPage,
+            "totalPages":totalPages
+        }
     """
-    if query_page == 0:
-        query_page = 1
+    if querypage == 0:
+        querypage = 1
     total = querys.count()
-    _paginate = querys.paginate(query_page, per_page=per_page, error_out=False)
+    _paginate = querys.paginate(querypage, per_page=perpage, error_out=False)
     return total, _paginate.items, _paginate.page, _paginate.pages
 
 
@@ -189,5 +196,5 @@ def GenerateToken(plaintext=None):
         str
     """
     sourcestr = plaintext + str(T_Stamp()) + RandomStr()
-    print(plaintext, sourcestr)
+    # print(plaintext, sourcestr)
     return str(hashlib.md5(sourcestr.encode("utf8")).hexdigest())

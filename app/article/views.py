@@ -7,7 +7,7 @@ def Get(request):
     if not id:
         return 400, "参数有误", {}
     article = ArticleData.query.get(id)
-    return 200, "", article.toDict()
+    return 200, "", article.toDict(type=["content"])
 
 def Query(request):
     maincategory = request.get("maincategory", None)
@@ -43,7 +43,45 @@ def Query(request):
         "totalPages":totalPages
     }
 
+def AdminArticleList(request):
+    maincategory = request.get("maincategory", None)
+    sourcetype = request.get("sourcetype", None)
+
+    keyword = request.get("keyword", None)
+
+    querypage = request.get('querypage',1)
+    perpage = request.get('perpage',10)
+
+    userid = request.get('userid',None)
+
+    verify = request.get('verify',0)
+    is_delete = request.get('is_delete',False)
+
+    querys = ArticleData.query.filter(ArticleData.is_delete==is_delete,ArticleData.verify==verify).order_by(ArticleData.create_time.desc())
+    
+    if userid:
+        querys = querys.filter(ArticleData.uploaduser == userid)
+
+    if maincategory:
+        querys = querys.filter(ArticleData.maincategory == maincategory)
+
+    if sourcetype:
+        querys = querys.filter(ArticleData.sourcetype == sourcetype)
+
+    if keyword:
+        querys = querys.filter(ArticleData.title.contains(keyword))
+
+    total, result, currentPage, totalPages = _Paginate(querys, querypage, perpage)
+
+    return 200, "", {
+        "total":total,  
+        "result":[i.toDict() for i in result],  
+        "currentPage":currentPage,  
+        "totalPages":totalPages
+    }
+
 def Push(request):
+    current_account = request['current_account']
     id = request.get("id",None)
 
     title = request.get("title",None)
@@ -55,6 +93,8 @@ def Push(request):
     sourcetype = request.get("sourcetype",None)
     maincategory = request.get("maincategory",None)
     activity = request.get("activity",None)
+
+    tagslist = request['tags']
 
     if sourcetype in [2,3]:
         if not sourceauthor:
@@ -83,12 +123,14 @@ def Push(request):
     else:
         articleobj = ArticleData()
         requesttype = "create"
+        articleobj.uploaduser = current_account.id
+        articleobj.verify = 1
 
     categoryobj = ArticleCategory.query.get(maincategory)
     if not categoryobj:
-        return 400, "分区有误", {}
+        return 400, "分区类目有误", {}
     else:
-        articleobj.maincategory = categoryobj
+        articleobj.maincategory = categoryobj.id
 
     if activity:
         activityobj = ArticleActivity.query.get(activity)
@@ -113,4 +155,6 @@ def Push(request):
     articleobj.sourcetype = sourcetype
     articleobj.maincategory = maincategory
     articleobj._update()
+    from app.tag.dll import BindArticle
+    BindArticle(articleobj.id,tagslist)
     return 200, "", articleobj.id

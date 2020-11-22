@@ -11,7 +11,8 @@ from app.register import register
 from app.login import login
 from app.article import article
 from app.follow import follow
-
+from app.tag import tag
+from app.category import category
 
 """
     配置蓝图映
@@ -24,7 +25,9 @@ DEFAULT_BLUEPRINT = (
     (register, '/register'),
     (login, '/login'),
     (article, '/article'),
-    (follow, '/follow')
+    (follow, '/follow'),
+    (tag, '/tag'),
+    (category, '/category')
 )
 
 def config_blueprint(app):

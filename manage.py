@@ -4,7 +4,7 @@ from app import create_app
 from app.Extensions import db
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager, Shell, Server, Command, Option
-from app.Models import AccountAdmin, AccountUser
+from app.Models import AccountAdmin, AccountUser, TagBindRecord
 from app.Config import BaseConfig, config
 
 
@@ -20,15 +20,15 @@ class CreateAdmin(Command):
 
     option_list = (
         Option('-u', '--username', dest='username', default=None),
-        Option('-a', '--account', dest='account', default=None),
+        Option('-e', '--email', dest='email', default=None),
         Option('-p', '--password', dest='password', default=None)
     )
 
-    def run(self, username, account, password):
-        if not all([username, account, password]):
-            raise AttributeError("参数有误, 创建管理员方法必须输入管理员用户名,登录账户,密码, -u -a -p")
+    def run(self, username, email, password):
+        if not all([username, email, password]):
+            raise AttributeError("参数有误, 创建管理员方法必须输入管理员用户名,登录账户,密码, -u -e -p")
 
-        add = AccountAdmin().createadmin(username, account, password)
+        add = AccountAdmin().createadmin(username, email, password)
         print("创建新管理员" + " < " + add.username," ID:", add.id, " > " + "成功")
         print("账户:",add.account)
         print("密码:",add.password)

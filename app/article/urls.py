@@ -14,3 +14,15 @@ def Get(request):
 def Query(request):
     """获取文章列表"""
     return ReturnRequest(views.Query(request.json))
+
+@article.route('/admin/articlelist', methods=["POST"])
+@TOKEN(1)
+def AdminArticleList(request):
+    """管理员用获取接口"""
+    return ReturnRequest(views.AdminArticleList(request.json))
+
+@article.route('/push', methods=["POST"])
+@TOKEN(2)
+def Psuh(request):
+    """发布文章"""
+    return ReturnRequest(views.Push(request.json))

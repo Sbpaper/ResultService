@@ -16,6 +16,8 @@ from app.upload import FileCompress
 """
 UPLOADFILE_CONFIG = {
     'userhead': '/head',
+    'article_cover': '/article/cover',
+    'article_pic': '/article/pic',
 }
 
 def CreateNewFilename(ext):
@@ -105,6 +107,10 @@ def upload_file(request):
     # 根据不同的上传标签制定不停的文件处理流
     if upload_key in ['userhead']:
         files = FileCompress.HeadImg(file)
+
+    elif upload_key in ['article_cover']:
+        files = FileCompress.ArticleCover(file)
+
     else:
         files = file
 

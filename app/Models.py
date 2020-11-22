@@ -33,8 +33,8 @@ class BaseModel(object):
         db.session.add(self)
         db.session.commit()
 
-    def __repr__(self):
-        return '[ repr ] Class: %s, ID: %r' % (self.__class__.__name__, self.id)
+    # def __repr__(self):
+    #     return '[ repr ] Class: %s, ID: %r' % (self.__class__.__name__, self.id)
 
 
 class BaseModel_Account(object):
@@ -61,11 +61,14 @@ class BaseModel_Account(object):
     token = db.Column(db.Text)
     create_time = db.Column(db.DateTime, default=datetime.now)  # 记录的创建时间
     update_time = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)  # 记录的更新时间
+    username = db.Column(db.String(255))
+    password = db.Column(db.Text)
+    head = db.Column(db.Text)
 
     def _set_token(self):
         """设置新的Token"""
         from app.Tool import GenerateToken
-        self.token = GenerateToken(str(self.email))
+        self.token = GenerateToken(str(self.update_time))
         db.session.commit()
         return True
 
@@ -94,6 +97,13 @@ class BaseModel_Account(object):
         db.session.commit()
         return True
 
+    @property
+    def userhead(self):
+        path = config[AppRAM.runConfig].STATIC_LOADPATH + '/static/head/'
+        if self.head:
+            return path + self.head
+        return path + 'default-userhead.jpg'
+
     def __repr__(self):
         return '[ repr ] Class: %s, ID: %r' % (self.__class__.__name__, self.id)
 
@@ -103,9 +113,7 @@ class AccountAdmin(BaseModel_Account, db.Model):
 
     __tablename__ = 'account_admin'
     account = db.Column(db.Text)
-    username = db.Column(db.String(255))
-    password = db.Column(db.Text)
-
+    
     def toDict(self):
         return dict(
             id=self.id,
@@ -128,10 +136,7 @@ class AccountUser(BaseModel_Account, db.Model):
 
     __tablename__ = 'account_user'
     email = db.Column(db.Text)
-    head = db.Column(db.Text)
     introduce = db.Column(db.Text)
-    username = db.Column(db.String(255))
-    password = db.Column(db.Text)
     status = db.Column(db.Integer, default=0)
 
     fans_count = db.Column(db.Integer, default=0)
@@ -150,13 +155,6 @@ class AccountUser(BaseModel_Account, db.Model):
         """设置用户Status"""
         self.status = newstatus
         db.session.commit()
-
-    @property
-    def userhead(self):
-        path = config[AppRAM.runConfig].STATIC_LOADPATH + '/static/head/'
-        if self.head:
-            return path + self.head
-        return path + 'default-userhead.jpg'
 
     def toDict(self, type=[], userid=None):
         json = dict(
@@ -188,7 +186,17 @@ class ArticleCategory(BaseModel, db.Model):
     __tablename__ = 'articlec_ategory'
 
     name = db.Column(db.String(255))
-    weight = db.Column(db.Integer, default=0)
+    weight = db.Column(db.Integer, default=0)   # 权重
+
+    def add(self, name):
+        self.name = name
+        self._update()
+
+    def toDict(self):
+        return dict(
+            id = self.id,
+            name = self.name
+        )
 
 class ArticleActivity(BaseModel, db.Model):
     __tablename__ = 'articlea_ctivity'
@@ -208,7 +216,7 @@ class ArticleData(BaseModel, db.Model):
     cover = db.Column(db.String(255))
     sourceauthor = db.Column(db.String(255))        # 原作者
     sourceaddr = db.Column(db.Text)                 # 来源地址
-    sourcetype = db.Column(db.Integer)              # 来源类型      1站内原创, 2趣味论文分享, 3趣味网文分享
+    sourcetype = db.Column(db.Integer)              # 来源类型      1 站内原创, 2 趣味论文分享, 3 趣味网文分享
     commentcount = db.Column(db.Integer, default=0) # 评论数统计
     uploaduser = db.Column(db.Integer)              # 上传的用户id
     is_delete = db.Column(db.Boolean, default=False)# 删除状态
@@ -218,12 +226,21 @@ class ArticleData(BaseModel, db.Model):
     maincategory = db.Column(db.Integer)            # 主类目
     activity = db.Column(db.Integer)                # 活动
 
-    def toDict(self):
+    def toDict(self, type=[]):
+        addjson = {}
+
+        if "content" in type:
+            addjson = {
+                "content": self.content
+            }
+
         return dict(
+            id = self.id,
             title = self.title,
-            content = self.content,
+            # content = self.content,
             introduce = self.introduce,
-            cover = self.cover,
+            maincategory = self.maincategory,
+            cover = config[AppRAM.runConfig].STATIC_LOADPATH + '/static/article/cover/' + self.cover,
             sourceauthor = self.sourceauthor,
             sourceaddr = self.sourceaddr,
             sourcetype = self.sourcetype,
@@ -233,7 +250,8 @@ class ArticleData(BaseModel, db.Model):
             verify = self.verify,
             verifytxt = self.verifytxt,
             create_time = datetime.strftime(self.create_time, "%Y-%m-%d %H:%M:%S"),
-            update_time = datetime.strftime(self.update_time, "%Y-%m-%d %H:%M:%S")
+            update_time = datetime.strftime(self.update_time, "%Y-%m-%d %H:%M:%S"),
+            **addjson
         )
 
 class FollowRecord(BaseModel, db.Model):
@@ -248,20 +266,85 @@ class ThumbupRecord(BaseModel, db.Model):
     userid = db.Column(db.Integer)
     articleid = db.Column(db.Integer)
 
+
 class Tag(BaseModel, db.Model):
     __tablename__ = 'tag'
 
     name = db.Column(db.String(255))
 
+    def toDict(self):
+        return dict(
+            id = self.id,
+            name = self.name
+        )
+
+    def add(self, name):
+        self.name = name
+        self._update()
+        return self
+
+class TagIndex(BaseModel, db.Model):
+    __tablename__ = 'tag_index'
+
+    tagid = db.Column(db.Integer)
+    count = db.Column(db.Integer)
+
+
 class TagBindRecord(BaseModel, db.Model):
-    __tablename__ = 'Tag_bindrecord'
+    __tablename__ = 'tag_bindrecord'
 
     tagid = db.Column(db.Integer)
     articleid = db.Column(db.Integer)
 
+    def addSub(self, tagid, articleid):
+        self.tagid = tagid
+        self.articleid = articleid
+        self._update()
+
+    def toDict(self):
+        return dict(
+            id = self.id,
+            tagid = self.tagid,
+            articleid = self.articleid,
+            **{
+                "tag":Tag.query.get(self.tagid).toDict()
+            }
+        )
+
 class TagSubRecord(BaseModel, db.Model):
-    # sub(subscription)
+    # Sub(subscription)
     __tablename__ = 'tag_subrecord'
 
     tagid = db.Column(db.Integer)
     userid = db.Column(db.Integer)
+
+    def addSub(self, tagid, userid):
+        self.tagid = tagid
+        self.userid = userid
+        self._update()
+
+    def toDict(self):
+        return dict(
+            id = self.id,
+            tagid = self.tagid,
+            userid = self.userid,
+            **{
+                "tag":Tag.query.get(self.tagid).toDict()
+            }
+        )
+
+class MessageData(BaseModel, db.Model):
+    # Sub(subscription)
+    __tablename__ = 'messagedata'
+
+    userid = db.Column(db.Integer)
+    msgtype = db.Column(db.Integer)     # 1 = 系统消息 2 = 回复消息
+    content = db.Column(db.Text)
+
+    def toDict(self):
+        return dict(
+            id = self.id,
+            userid = self.userid,
+            msgtype = self.msgtype,
+            content = self.content
+        )

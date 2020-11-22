@@ -7,3 +7,9 @@ from app.Middleware import NORMAL, TOKEN
 def Signin(request):
     """登录接口"""
     return ReturnRequest(views.Signin(request.json))
+
+@login.route('/admin', methods=["POST"])
+@NORMAL
+def adminlogin(request):
+    """管理员登录接口"""
+    return ReturnRequest(views.adminlogin(request.json))
