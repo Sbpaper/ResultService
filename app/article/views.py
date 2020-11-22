@@ -1,13 +1,14 @@
 from app.Models import ArticleData, ArticleCategory, ArticleActivity
 from app.Tool import _Paginate
 from datetime import datetime
+from app.Extensions import db
 
 def Get(request):
     id = request.get("id",None)
     if not id:
         return 400, "参数有误", {}
     article = ArticleData.query.get(id)
-    return 200, "", article.toDict(type=["content"])
+    return 200, "", article.toDict(type=["content","uploaduser"])
 
 def Query(request):
     maincategory = request.get("maincategory", None)
@@ -43,6 +44,29 @@ def Query(request):
         "totalPages":totalPages
     }
 
+
+def AdminArticleverify(request):
+    articleid = request.get("articleid", None)
+    sets = request.get("sets", 100)
+    verifytxt = request.get("verifytxt", None)
+
+    if not articleid or sets == 100:
+        return 400, "参数有误", {}
+
+    if sets == 2:
+        if not verifytxt:
+            return 400, "请提交退回原因", {}
+
+    obj = ArticleData.query.get(articleid)
+    if not obj:
+        return 400, "文章不存在", {}
+
+    obj.verify = sets
+    obj.verifytxt = verifytxt
+    obj.verifydate = datetime.now()
+    db.session.commit()
+    return 200, "", {}
+
 def AdminArticleList(request):
     maincategory = request.get("maincategory", None)
     sourcetype = request.get("sourcetype", None)
@@ -54,11 +78,14 @@ def AdminArticleList(request):
 
     userid = request.get('userid',None)
 
-    verify = request.get('verify',0)
+    verify = request.get('verify',100)
     is_delete = request.get('is_delete',False)
 
-    querys = ArticleData.query.filter(ArticleData.is_delete==is_delete,ArticleData.verify==verify).order_by(ArticleData.create_time.desc())
+    querys = ArticleData.query.filter(ArticleData.is_delete==is_delete).order_by(ArticleData.create_time.desc())
     
+    if verify != 100:
+        querys = querys.filter(ArticleData.verify == verify)
+
     if userid:
         querys = querys.filter(ArticleData.uploaduser == userid)
 

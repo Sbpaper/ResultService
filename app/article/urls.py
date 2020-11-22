@@ -21,6 +21,13 @@ def AdminArticleList(request):
     """管理员用获取接口"""
     return ReturnRequest(views.AdminArticleList(request.json))
 
+@article.route('/admin/verify', methods=["POST"])
+@TOKEN(1)
+def AdminArticleverify(request):
+    """审核接口"""
+    return ReturnRequest(views.AdminArticleverify(request.json))
+
+
 @article.route('/push', methods=["POST"])
 @TOKEN(2)
 def Psuh(request):

@@ -221,8 +221,9 @@ class ArticleData(BaseModel, db.Model):
     uploaduser = db.Column(db.Integer)              # 上传的用户id
     is_delete = db.Column(db.Boolean, default=False)# 删除状态
     verify = db.Column(db.Integer)                  # 校验状态      0正常, 1未审核, 2被退回
+    verifydate = db.Column(db.DateTime)             # 审核时间
     verifytxt = db.Column(db.Text)                  # 校验不合格说明
-    Pageviews = db.Column(db.Integer, default=0)    # 浏览量
+    pageviews = db.Column(db.Integer, default=0)    # 浏览量
     maincategory = db.Column(db.Integer)            # 主类目
     activity = db.Column(db.Integer)                # 活动
 
@@ -230,14 +231,22 @@ class ArticleData(BaseModel, db.Model):
         addjson = {}
 
         if "content" in type:
-            addjson = {
+            addjson = dict(addjson,**{
                 "content": self.content
-            }
+            })
+
+        if "uploaduser" in type:
+            addjson = dict(addjson,**{
+                "uploaduser": AccountUser.query.get(int(self.uploaduser)).toDict()
+            })
+
+        print(addjson)
 
         return dict(
             id = self.id,
             title = self.title,
             # content = self.content,
+            pageviews = self.pageviews,
             introduce = self.introduce,
             maincategory = self.maincategory,
             cover = config[AppRAM.runConfig].STATIC_LOADPATH + '/static/article/cover/' + self.cover,
@@ -245,7 +254,6 @@ class ArticleData(BaseModel, db.Model):
             sourceaddr = self.sourceaddr,
             sourcetype = self.sourcetype,
             commentcount = self.commentcount,
-            uploaduser = self.uploaduser,
             is_delete = self.is_delete,
             verify = self.verify,
             verifytxt = self.verifytxt,
